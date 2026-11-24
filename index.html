@@ -66,6 +66,10 @@ button[disabled]{opacity:.5;cursor:default}
 .ok{background:var(--gold-soft);border:1px solid var(--gold);border-radius:12px;padding:20px;text-align:center}
 .ok h2{font:800 26px var(--head);margin:0 0 6px}
 .err{color:var(--danger);font-size:15px;margin-top:8px}
+.q.invalid textarea,.q.invalid input{border-color:var(--danger)}
+.q .qerr{display:none;color:var(--danger);font-size:15px;margin:6px 0 0}
+.q.invalid .qerr{display:block}
+.banner-err{background:var(--gold-soft);border:1px solid var(--danger);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:16px;margin-bottom:16px}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 </style>
 </head>
@@ -161,12 +165,14 @@ SECTIONS.forEach(sec=>{
 });
 const TOTAL = STEPS.length;          // telas de perguntas
 const REVIEW = TOTAL;                // índice da tela final
+const ALLQ = SECTIONS.flatMap(s=>s.qs);
 
 /* ===== ESTADO ===== */
 const KEY = "donaleo-levantamento-v1";
 let state = {step:0, name:"", a:{}};
 try{ const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(s && s.a) state = Object.assign(state,s); }catch(e){}
 if(state.step > REVIEW) state.step = 0;
+state.step = Math.min(state.step, firstIncomplete());
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
 const $ = s => document.querySelector(s);
@@ -177,6 +183,15 @@ function answerOf(q){
     return q.fields.map((f,i)=>{ const v=(state.a[q.id+"_"+i]||"").trim(); return v ? f+": "+v : ""; }).filter(Boolean).join("\n");
   }
   return (state.a[q.id]||"").trim();
+}
+function isAnswered(id){
+  const q = ALLQ.find(x=>x.id===id);
+  if(q.fields) return q.fields.every((f,i)=>(state.a[id+"_"+i]||"").trim());
+  return !!(state.a[id]||"").trim();
+}
+function firstIncomplete(){
+  for(let i=0;i<STEPS.length;i++){ if(!STEPS[i].qs.every(q=>isAnswered(q.id))) return i; }
+  return REVIEW;
 }
 function countAnswered(){
   let n=0,t=0;
@@ -207,7 +222,7 @@ function renderStep(step){
   const {sec, qs} = step;
   let h = '<h1 class="sec-title">'+esc(sec.id)+'. '+esc(sec.title)+'</h1><p class="sec-desc">'+esc(sec.desc)+'</p>';
   qs.forEach(q=>{
-    h += '<div class="q">';
+    h += '<div class="q" data-qid="'+q.id+'">';
     h += '<span class="lbl" id="l-'+q.id+'"><span class="qid">'+q.id+'</span>'+esc(q.t)+
          '<span class="tag">'+q.tag+'</span>'+(q.deadline?'<span class="tag deadline">'+esc(q.deadline)+'</span>':'')+'</span>';
     if(q.h) h += '<p class="hint">'+esc(q.h)+'</p>';
@@ -219,8 +234,9 @@ function renderStep(step){
       });
       h += '</div>';
     } else {
-      h += '<textarea data-k="'+q.id+'" aria-labelledby="l-'+q.id+'" placeholder="Digite aqui. Pode deixar em branco e voltar depois.">'+esc(state.a[q.id]||"")+'</textarea>';
+      h += '<textarea data-k="'+q.id+'" aria-labelledby="l-'+q.id+'" placeholder="Digite aqui. Se não souber, escreva \"não sei\".">'+esc(state.a[q.id]||"")+'</textarea>';
     }
+    h += '<p class="qerr" role="alert">Preencha esta pergunta para continuar.</p>';
     h += '</div>';
   });
   h += '<div class="nav"><button class="btn-ghost" id="back"'+(state.step===0?' disabled':'')+'>Voltar</button>'+
@@ -228,16 +244,32 @@ function renderStep(step){
   $("#stage").innerHTML = h;
 
   document.querySelectorAll("[data-k]").forEach(el=>{
-    el.addEventListener("input",()=>{ state.a[el.dataset.k]=el.value; save(); });
+    el.addEventListener("input",()=>{
+      state.a[el.dataset.k]=el.value; save();
+      const box = el.closest(".q");
+      if(box && box.classList.contains("invalid") && isAnswered(box.dataset.qid)) box.classList.remove("invalid");
+    });
   });
   $("#back").onclick = ()=>go(-1);
-  $("#next").onclick = ()=>go(1);
+  $("#next").onclick = ()=>{
+    const missing = step.qs.filter(q=>!isAnswered(q.id));
+    document.querySelectorAll(".q").forEach(b=>b.classList.toggle("invalid", missing.some(q=>q.id===b.dataset.qid)));
+    if(missing.length){
+      const first = document.querySelector(".q.invalid");
+      const f = first.querySelector("textarea, input:placeholder-shown, input");
+      first.scrollIntoView({block:"center",behavior:"smooth"});
+      const empty = [...first.querySelectorAll("textarea,input")].find(x=>!x.value.trim()) || f;
+      empty.focus({preventScroll:true});
+      return;
+    }
+    go(1);
+  };
 }
 
 function renderReview(){
   const {n,t} = countAnswered();
   let h = '<h1 class="sec-title">Revisar e enviar</h1>'+
-          '<p class="sec-desc">Você respondeu '+n+' de '+t+' perguntas. Pode enviar assim mesmo e completar o resto depois, ou voltar e preencher o que faltou.</p>';
+          '<p class="sec-desc">Todas as '+t+' perguntas foram respondidas. Confira e envie.</p>';
   h += '<label class="field-name" for="nm"><strong>Seu nome</strong></label>'+
        '<input type="text" id="nm" value="'+esc(state.name)+'" placeholder="Quem está respondendo?">';
   h += '<div class="review">';
@@ -268,6 +300,7 @@ function renderReview(){
 
 function go(d){
   state.step = Math.min(Math.max(state.step+d,0),REVIEW);
+  state.step = Math.min(state.step, firstIncomplete());
   save(); render();
 }
 
@@ -283,8 +316,15 @@ function buildText(){
   return out;
 }
 function setStatus(html){ $("#status").innerHTML = html; }
+function needName(){
+  if((state.name||"").trim()) return false;
+  setStatus('<p class="err" role="alert">Escreva seu nome para continuar.</p>');
+  $("#nm").focus();
+  return true;
+}
 
 async function copyAll(){
+  if(needName()) return;
   const txt = buildText();
   try{
     await navigator.clipboard.writeText(txt);
@@ -294,6 +334,7 @@ async function copyAll(){
   }
 }
 function download(){
+  if(needName()) return;
   const blob = new Blob([buildText()],{type:"text/plain;charset=utf-8"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -302,6 +343,7 @@ function download(){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 async function send(){
+  if(needName()) return;
   const btn = $("#send"); btn.disabled = true; btn.textContent = "Enviando...";
   try{
     const r = await fetch("https://api.web3forms.com/submit",{
