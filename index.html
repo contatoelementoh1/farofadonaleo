@@ -1,2 +1,326 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dona Léo | Levantamento para a loja online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f1; --card:#ffffff; --ink:#22301e; --muted:#5d6b57;
+  --line:#d9ddcf; --green:#2f5a2a; --green-ink:#ffffff; --gold:#e8b23c; --gold-soft:#fbf1d6;
+  --danger:#a8321f;
+  --head:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141a12; --card:#1d261a; --ink:#eef1e6; --muted:#a3b09b;
+    --line:#33402f; --green:#8fc47f; --green-ink:#10200c; --gold:#e8b23c; --gold-soft:#3a3118;
+    --danger:#ff9a85;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.5 var(--body);min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 56px}
+header.top{display:flex;align-items:center;gap:12px;padding:8px 0 18px}
+.logo{width:44px;height:44px;border-radius:50%;background:var(--gold);color:#22301e;display:grid;place-items:center;font:800 22px var(--head)}
+.brand{font:800 20px/1.1 var(--head)}
+.brand small{display:block;font:400 14px var(--body);color:var(--muted)}
+.progress{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress>div{height:100%;width:0;background:var(--green);border-radius:99px;transition:width .35s ease}
+.meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin:8px 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px}
+.sec-title{font:800 28px/1.15 var(--head);margin:0 0 6px}
+.sec-desc{margin:0 0 20px;color:var(--muted)}
+.q{padding:18px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0;padding-top:4px}
+.q label,.q .lbl{display:block;font-weight:600;margin-bottom:8px}
+.qid{display:inline-block;min-width:2.2em;font:800 15px var(--head);color:var(--green)}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:2px}
+.tag.deadline{background:var(--gold-soft);border-color:var(--gold);color:var(--ink)}
+.hint{font-size:15px;color:var(--muted);margin:-4px 0 8px}
+textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:96px;resize:vertical}
+textarea:focus,input:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:1px;border-color:var(--green)}
+.sabores{display:grid;gap:8px}
+.sabores div{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:10px;align-items:center}
+.sabores span{font-size:16px}
+@media(max-width:520px){.sabores div{grid-template-columns:1fr;gap:4px}}
+.nav{display:flex;gap:12px;justify-content:space-between;margin-top:20px}
+button{font:600 17px var(--body);border-radius:10px;padding:12px 22px;cursor:pointer;border:1.5px solid var(--green)}
+.btn-main{background:var(--green);color:var(--green-ink)}
+.btn-ghost{background:transparent;color:var(--green)}
+button[disabled]{opacity:.5;cursor:default}
+.saved{font-size:14px;color:var(--muted);text-align:center;margin-top:14px}
+.review h3{font:800 18px var(--head);margin:18px 0 6px}
+.review dl{margin:0}
+.review dt{font-weight:600;font-size:15px;margin-top:10px}
+.review dd{margin:2px 0 0;color:var(--muted);white-space:pre-wrap;font-size:16px}
+.empty{font-style:italic}
+.field-name{margin:18px 0 6px}
+.notice{background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;font-size:16px;margin:14px 0}
+.ok{background:var(--gold-soft);border:1px solid var(--gold);border-radius:12px;padding:20px;text-align:center}
+.ok h2{font:800 26px var(--head);margin:0 0 6px}
+.err{color:var(--danger);font-size:15px;margin-top:8px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo" aria-hidden="true">L</div>
+    <div class="brand">Dona Léo<small>Levantamento para a loja online</small></div>
+  </header>
+
+  <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="pbar"><div id="pfill"></div></div>
+  <div class="meta"><span id="stepInfo"></span><span id="pctInfo"></span></div>
+
+  <main class="card" id="stage" aria-live="polite"></main>
+  <p class="saved" id="savedMsg">Suas respostas ficam salvas neste aparelho enquanto você preenche.</p>
+</div>
+
+<script>
+/* ===== CONFIGURAÇÃO ===== */
+// Para receber as respostas por e-mail: crie uma chave gratuita em web3forms.com
+// e cole abaixo. Sem chave, a última tela oferece copiar ou baixar as respostas.
+const WEB3FORMS_KEY = "";
+const FORM_TITLE = "Dona Léo | Respostas do levantamento";
+
+/* ===== PERGUNTAS ===== */
+const SECTIONS = [
+{
+  id:"A", title:"Números de hoje",
+  desc:"Ponto de partida para medir o que a loja e as redes vão trazer. Estimativa vale; diga de onde veio (caderno, extrato, maquininha, planilha).",
+  qs:[
+    {tag:"NÚMEROS", t:"Faturamento por mês nos últimos 3 meses, ou a média. Qual é o mês mais forte e o mais fraco do ano?"},
+    {tag:"NÚMEROS", t:"Pedidos por mês e valor médio de cada pedido."},
+    {tag:"NÚMEROS", t:"Quanto das vendas é Barretos e quanto é fora?", h:"Se houver, mandar planilha, caderno ou prints dos pedidos dos últimos 3 a 6 meses, com cidade, formato, sabor e valor."},
+    {tag:"NÚMEROS", t:"Produção em kg por mês e quanto daria para produzir a mais sem contratar ninguém."},
+    {tag:"NÚMEROS", t:"Clientes: quantas pessoas diferentes compraram nos últimos 6 meses, mais ou menos, e quantas costumam voltar a comprar?"},
+    {tag:"NÚMEROS", t:"Revenda: quantos lugares (restaurantes, empórios, mercados) compram hoje?"},
+    {tag:"NÚMEROS", t:"Redes sociais: quais contas a Dona Léo tem (Instagram @donaleoalimentos, Facebook, TikTok) e quem tem a senha de cada uma?", h:"Os seguidores o Danilo confere direto."},
+    {tag:"NÚMEROS", t:"Google: a Dona Léo já tem perfil no Google (aparece no Maps)? Qual a nota e quantas avaliações?"}
+  ]
+},
+{
+  id:"B", title:"Expectativas para os próximos 3 meses",
+  desc:"Para conversar na reunião. Viram as metas do plano até fevereiro de 2027.",
+  qs:[
+    {tag:"NÚMEROS", t:"Quanto quer faturar por mês em fevereiro de 2027?"},
+    {tag:"NÚMEROS", t:"Quantos seguidores quer ter no Instagram até lá?"},
+    {tag:"NÚMEROS", t:"O que seria um bom primeiro mês da loja online (pedidos ou valor)?"},
+    {tag:"NÚMEROS", t:"Se as vendas dobrarem, a produção aguenta? O que precisaria mudar (gente, horário, equipamento)?"},
+    {tag:"NÚMEROS", t:"Quanto pode investir por mês em divulgação (anúncios, fotos, prêmios de campanha)?"}
+  ]
+},
+{
+  id:"D", title:"Produto",
+  desc:"O que a loja vai mostrar sobre cada produto. Usamos o que já existe nas etiquetas.",
+  qs:[
+    {tag:"MANUAL", t:"Grafia oficial dos 6 sabores.", h:"Hoje aparecem variações (\"Chimichurri Aromático\", \"Paçoca Caipira\", \"Damasco c/ Castanha\"). Escreva o nome exato de cada um.",
+      fields:["Chimichurri","Picante","Paçoca","Limão Siciliano","Queima do Alho","Damasco com Castanha de Caju"]},
+    {tag:"MANUAL", t:"Sabor e formato mais vendidos (de verdade, não impressão).", h:"Define o produto em destaque na loja e no manual."},
+    {tag:"MANUAL", t:"Por que a receita leva soja? Crocância, tradição da receita original, rendimento?", h:"Define como a soja é apresentada."},
+    {tag:"LOJA", deadline:"Prazo: 26/11", t:"Peso líquido real de cada formato (obrigatório).",
+      h:"Hoje há divergência: a tabela de preços diz 200 g e a etiqueta da garrafinha diz 220 g. Para cada formato (garrafinha, pacote de 300 g e pacote de 1 kg): mandar foto da etiqueta mostrando o peso impresso e pesar 1 unidade numa balança, informando o peso com e sem embalagem. O peso que vale para a loja e para as etiquetas é o confirmado aqui."},
+    {tag:"LOJA", t:"Todos os 6 sabores existem nos 3 formatos?", h:"Se algum sabor não tiver algum formato, anotar qual."},
+    {tag:"LOJA", t:"Etiquetas atuais em uso: foto da frente e do verso de cada formato.", h:"Ingredientes, alérgenos, validade, conservação e código de barras, se houver. A loja aproveita esses textos."},
+    {tag:"LOJA", t:"Tabela nutricional de cada sabor: enviar o arquivo das 6 tabelas feitas pela nutricionista."},
+    {tag:"LOJA", t:"Algum sabor leva ingrediente de origem animal? Bacon, carne, charque, banha, manteiga, queijo.", h:"Isso pode mudar quem fiscaliza e a venda para outros estados."},
+    {tag:"LOJA", t:"Garrafinha e doypack: a garrafinha tem lacre? O doypack tem zíper (fecho que abre e fecha)?"}
+  ]
+},
+{
+  id:"E", title:"Empresa",
+  desc:"Dados que a loja, os meios de pagamento e as plataformas pedem.",
+  qs:[
+    {tag:"LOJA", t:"Razão social e CNPJ (ou MEI) da empresa."},
+    {tag:"LOJA", t:"Endereço completo do fabricante. Pode ser público (loja online, Google)?"},
+    {tag:"LOJA", t:"Licença sanitária / alvará da Vigilância Sanitária: existe? Número e validade.", h:"Só para levantamento."},
+    {tag:"MANUAL", t:"Onde a farofa é produzida: cozinha própria ou produção terceirizada? Quem produz no dia a dia?"},
+    {tag:"DEPOIS", t:"Nutricionista: nome e contato."},
+    {tag:"DEPOIS", t:"Selo \"Produto de Barretos\" / Certificado de Qualidade e Excelência: enviar o documento, quem concedeu, quando, e as regras de uso do selo."},
+    {tag:"DEPOIS", t:"Laudos existentes: microbiológico, nutricional, de validade."},
+    {tag:"DEPOIS", t:"Eventos de que a marca participou: nome, cidade, data e alguma foto."}
+  ]
+}
+];
+
+/* ===== MONTA AS TELAS (3 perguntas cada) ===== */
+const PER = 3;
+const STEPS = [];
+SECTIONS.forEach(sec=>{
+  sec.qs.forEach((q,i)=>{ q.id = sec.id + (i+1); });
+  for(let i=0;i<sec.qs.length;i+=PER){
+    STEPS.push({sec, qs: sec.qs.slice(i,i+PER)});
+  }
+});
+const TOTAL = STEPS.length;          // telas de perguntas
+const REVIEW = TOTAL;                // índice da tela final
+
+/* ===== ESTADO ===== */
+const KEY = "donaleo-levantamento-v1";
+let state = {step:0, name:"", a:{}};
+try{ const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(s && s.a) state = Object.assign(state,s); }catch(e){}
+if(state.step > REVIEW) state.step = 0;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function answerOf(q){
+  if(q.fields){
+    return q.fields.map((f,i)=>{ const v=(state.a[q.id+"_"+i]||"").trim(); return v ? f+": "+v : ""; }).filter(Boolean).join("\n");
+  }
+  return (state.a[q.id]||"").trim();
+}
+function countAnswered(){
+  let n=0,t=0;
+  SECTIONS.forEach(s=>s.qs.forEach(q=>{ t++; if(answerOf(q)) n++; }));
+  return {n,t};
+}
+
+/* ===== RENDER ===== */
+function render(){
+  const st = state.step;
+  const pct = Math.round((st/ (TOTAL+1)) * 100);
+  $("#pfill").style.width = Math.max(pct,4)+"%";
+  $("#pbar").setAttribute("aria-valuenow", pct);
+  $("#pctInfo").textContent = pct+"%";
+  $("#stage").scrollIntoView({block:"start"});
+  window.scrollTo(0,0);
+
+  if(st < TOTAL){
+    $("#stepInfo").textContent = "Tela "+(st+1)+" de "+(TOTAL+1);
+    renderStep(STEPS[st]);
+  } else {
+    $("#stepInfo").textContent = "Tela "+(TOTAL+1)+" de "+(TOTAL+1);
+    renderReview();
+  }
+}
+
+function renderStep(step){
+  const {sec, qs} = step;
+  let h = '<h1 class="sec-title">'+esc(sec.id)+'. '+esc(sec.title)+'</h1><p class="sec-desc">'+esc(sec.desc)+'</p>';
+  qs.forEach(q=>{
+    h += '<div class="q">';
+    h += '<span class="lbl" id="l-'+q.id+'"><span class="qid">'+q.id+'</span>'+esc(q.t)+
+         '<span class="tag">'+q.tag+'</span>'+(q.deadline?'<span class="tag deadline">'+esc(q.deadline)+'</span>':'')+'</span>';
+    if(q.h) h += '<p class="hint">'+esc(q.h)+'</p>';
+    if(q.fields){
+      h += '<div class="sabores">';
+      q.fields.forEach((f,i)=>{
+        const id = q.id+"_"+i;
+        h += '<div><span>'+esc(f)+'</span><input type="text" data-k="'+id+'" aria-label="'+esc(f)+'" value="'+esc(state.a[id]||"")+'"></div>';
+      });
+      h += '</div>';
+    } else {
+      h += '<textarea data-k="'+q.id+'" aria-labelledby="l-'+q.id+'" placeholder="Digite aqui. Pode deixar em branco e voltar depois.">'+esc(state.a[q.id]||"")+'</textarea>';
+    }
+    h += '</div>';
+  });
+  h += '<div class="nav"><button class="btn-ghost" id="back"'+(state.step===0?' disabled':'')+'>Voltar</button>'+
+       '<button class="btn-main" id="next">'+(state.step===TOTAL-1?'Revisar respostas':'Continuar')+'</button></div>';
+  $("#stage").innerHTML = h;
+
+  document.querySelectorAll("[data-k]").forEach(el=>{
+    el.addEventListener("input",()=>{ state.a[el.dataset.k]=el.value; save(); });
+  });
+  $("#back").onclick = ()=>go(-1);
+  $("#next").onclick = ()=>go(1);
+}
+
+function renderReview(){
+  const {n,t} = countAnswered();
+  let h = '<h1 class="sec-title">Revisar e enviar</h1>'+
+          '<p class="sec-desc">Você respondeu '+n+' de '+t+' perguntas. Pode enviar assim mesmo e completar o resto depois, ou voltar e preencher o que faltou.</p>';
+  h += '<label class="field-name" for="nm"><strong>Seu nome</strong></label>'+
+       '<input type="text" id="nm" value="'+esc(state.name)+'" placeholder="Quem está respondendo?">';
+  h += '<div class="review">';
+  SECTIONS.forEach(s=>{
+    h += '<h3>'+esc(s.id)+'. '+esc(s.title)+'</h3><dl>';
+    s.qs.forEach(q=>{
+      const a = answerOf(q);
+      h += '<dt>'+q.id+' '+esc(q.t)+'</dt><dd'+(a?'':' class="empty"')+'>'+(a?esc(a):'Sem resposta')+'</dd>';
+    });
+    h += '</dl>';
+  });
+  h += '</div>';
+  if(!WEB3FORMS_KEY){
+    h += '<div class="notice">Este formulário ainda não está ligado a um serviço de e-mail. Use os botões abaixo para copiar ou baixar as respostas e enviar para quem pediu.</div>';
+  }
+  h += '<div id="status"></div>';
+  h += '<div class="nav"><button class="btn-ghost" id="back">Voltar</button>';
+  h += WEB3FORMS_KEY ? '<button class="btn-main" id="send">Enviar respostas</button>' : '<button class="btn-main" id="copy">Copiar respostas</button>';
+  h += '</div>';
+  if(!WEB3FORMS_KEY) h += '<div class="actions"><button class="btn-ghost" id="dl">Baixar arquivo .txt</button></div>';
+  $("#stage").innerHTML = h;
+
+  $("#nm").addEventListener("input",e=>{ state.name=e.target.value; save(); });
+  $("#back").onclick = ()=>go(-1);
+  if(WEB3FORMS_KEY) $("#send").onclick = send;
+  else{ $("#copy").onclick = copyAll; $("#dl").onclick = download; }
+}
+
+function go(d){
+  state.step = Math.min(Math.max(state.step+d,0),REVIEW);
+  save(); render();
+}
+
+/* ===== SAÍDA ===== */
+function buildText(){
+  let out = FORM_TITLE+"\nNome: "+(state.name||"(não informado)")+"\nData: "+new Date().toLocaleDateString("pt-BR")+"\n";
+  SECTIONS.forEach(s=>{
+    out += "\n== "+s.id+". "+s.title+" ==\n";
+    s.qs.forEach(q=>{
+      out += "\n"+q.id+" "+q.t+"\n"+(answerOf(q)||"(sem resposta)")+"\n";
+    });
+  });
+  return out;
+}
+function setStatus(html){ $("#status").innerHTML = html; }
+
+async function copyAll(){
+  const txt = buildText();
+  try{
+    await navigator.clipboard.writeText(txt);
+    setStatus('<p class="sec-desc">Respostas copiadas. Cole em uma mensagem ou e-mail e envie.</p>');
+  }catch(e){
+    setStatus('<p class="err">Não consegui copiar automaticamente. Use o botão "Baixar arquivo .txt".</p>');
+  }
+}
+function download(){
+  const blob = new Blob([buildText()],{type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "respostas-dona-leo.txt";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function send(){
+  const btn = $("#send"); btn.disabled = true; btn.textContent = "Enviando...";
+  try{
+    const r = await fetch("https://api.web3forms.com/submit",{
+      method:"POST",
+      headers:{"Content-Type":"application/json",Accept:"application/json"},
+      body:JSON.stringify({access_key:WEB3FORMS_KEY, subject:FORM_TITLE, from_name:state.name||"Sem nome", name:state.name||"Sem nome", message:buildText()})
+    });
+    const j = await r.json();
+    if(!j.success) throw new Error(j.message||"erro");
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    $("#stage").innerHTML = '<div class="ok"><h2>Respostas enviadas</h2><p>Obrigado! Se lembrar de mais alguma coisa, é só preencher de novo.</p></div>';
+    $("#pfill").style.width="100%"; $("#pctInfo").textContent="100%";
+  }catch(e){
+    btn.disabled = false; btn.textContent = "Enviar respostas";
+    setStatus('<p class="err">Não foi possível enviar agora. Confira a conexão e tente de novo. Suas respostas continuam salvas.</p>');
+  }
+}
+
+render();
+</script>
+</body>
 </html>
